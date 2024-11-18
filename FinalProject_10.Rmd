@@ -1,13 +1,10 @@
 ---
-title: "Final Projec"
+title: "Final Project"
 author: "Ashton Wise, Destanie Pitt, Hayden Billmann"
 date: "`r Sys.Date()`"
 output: html_document
 ---
 
-## Introduction
-
-This is an R Markdown document.
 
 ## Analysis
 
