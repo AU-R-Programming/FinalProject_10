@@ -96,56 +96,86 @@ plot.MCI = function(x, ...){
 }
 
 
+# Our functions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#' @title Predicted Probability of Response Variable
-#'
-#' @description the predicted probability that the response variable yi is equal to 1
-#' given the predictor values xi and the coefficient vector β
-#' @param x_range A \code{vector} of dimension 2 used to denote the integration
-#' region of interest, i.e. [a, b].
-#' @param fun A \code{string} containing the function to be integrated. It
-#' is assumed that \code{x} is used as the variable of interest.
-#' @param B A \code{numeric} (integer) used to denote the number of simulations.
-#' @param seed A \code{numeric} used to control the seed of the random number
-#' generator used by this function.
-#' @return A \code{list} containing the following attributes:
-#' \describe{
-#'      \item{I}{Estimated value of the integral}
-#'      \item{var}{Estimated variance of the estimator}
-#' }
-#' @author Stephane Guerrier
-#' @importFrom stats runif
-#' @export
-#' @examples
-#' mc_int(x_range = c(0,1), fun = "x^2", B = 10^5)
-#' mc_int(x_range = c(0,1), fun = "x^2*sin(x^2/pi)", B = 10^5)
-p_i <- function(x_i, beta) {
-
-  1 / (1 + exp(t(-x_i) %*% beta))
+# loss function, just following the equations and lectures codes 11_12 and 11_14
+loss_function <- function(beta, X, y) {
+  p_i <- 1 / (1 + exp(-X %*% beta))
+  -sum(y * log(p_i) + (1 - y) * log(1 - p_i))
 }
 
+# User enters the data and we convert it to a numeric so we can do operations
+set.seed(1204)
+n <- readline(prompt = "Enter the number of observations: ")
+n <- as.integer(n)
+lambda <- readline(prompt = "Enter a value for lambda: ")
+lambda <- as.numeric(lambda)
+
+# Generate predictor variables: first column is normal, second column is Poisson with lambda equal to whatever number the user says
+X <- cbind(rnorm(n), rpois(n, lambda = lambda))
+beta_true <- c(0.5, -0.3, 0.7)
+X <- cbind(1, X)
+y <- rbinom(n, 1, 1 / (1 + exp(-X %*% beta_true)))
+
+# Optimization for beta hat
+
+# Initial beta comes from least-squares
+beta_initial <- solve(t(X) %*% X) %*% t(X) %*% y
 
 
+# fn argument is the optimization function
+fit <- optim(beta_initial, loss_function, X = X, y = y, method = "BFGS")
 
+# Print the optimized beta values obtained from the minimization
+beta_hat <- fit$par
+beta_hat
+
+# Now bootstrapping for confidence intervals
+
+# User enters the number of bootstrap samples
+B <- readline(prompt = "Enter the number of bootstrap samples (default 20): ")
+B <- ifelse(B == "", 20, as.integer(B))
+beta_boot <- matrix(NA, nrow = B, ncol = ncol(X))
+
+for (b in 1:B) {
+  sample <- sample(1:n, n, replace = TRUE)
+  X_boot <- X[sample, ]
+  y_boot <- y[sample]
+
+  fit_boot <- optim(beta_initial, loss_function, X = X_boot, y = y_boot, method = "BFGS")
+  beta_boot[b, ] <- fit_boot$par
+}
+
+# Calculate Confidence Intervals
+alpha <- readline(prompt = "Enter significance level (default 0.05): ")
+alpha <- ifelse(alpha == "", 0.05, as.numeric(alpha))
+confidence_interval <- apply(beta_boot, 2, quantile, probs = c(alpha / 2, 1 - alpha / 2))
+confidence_interval
+
+# Confusion Matrix and Metrics
+
+p_predicted <- 1 / (1 + exp(-X %*% beta_hat))  # Predicted probabilities
+y_predicted <- ifelse(p_predicted > 0.5, 1, 0)  # Classify predictions
+confusion_matrix <- table(Predicted = y_predicted, Actual = y)
+
+# Metrics
+
+prevalence <- sum(y) / length(y)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+sensitivity <- confusion_matrix[2, 2] / sum(confusion_matrix[, 2])
+specificity <- confusion_matrix[1, 1] / sum(confusion_matrix[, 1])
+false_discovery_rate <- confusion_matrix[2, 1] / sum(confusion_matrix[2, ])
+diagnostic_odds_ratio <- (sensitivity / (1 - specificity)) / ((1 - sensitivity) / specificity)
+
+# Print Metrics
+cat("Prevalence:\n")
+print(prevalence)
+cat("Confusion Matrix:\n")
+print(confusion_matrix)
+cat("Metrics:\n")
+cat("Accuracy:", accuracy, "\n")
+cat("Sensitivity:", sensitivity, "\n")
+cat("Specificity:", specificity, "\n")
+cat("False Discovery Rate:", false_discovery_rate, "\n")
+cat("Diagnostic Odds Ratio:", diagnostic_odds_ratio, "\n")
 
