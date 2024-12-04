@@ -9,23 +9,23 @@ loss_function(beta, X, y)
 \arguments{
 \item{beta}{A \code{vector} of coefficients associated with the features in xi.}
 
-\item{X}{A \code{string} containing the input data for the ith observation}
+\item{X}{The \bold{ith} row of the predictors}
 
-\item{y}{A \code{numeric} (integer) used to denote the number of simulations.}
+\item{y}{the \bold{ith} observation of the response}
 }
 \value{
-A \code{list} containing the following attributes:
-\describe{
-     \item{I}{Estimated value of the integral}
-     \item{var}{Estimated variance of the estimator}
-}
+`NULL`
 }
 \description{
-Calculates the negative log likelihood p_i
+Calculates the negative log likelihood p_i and plugs it into the loss function
 }
 \examples{
-loss_function([1,2], [1,2], 1)
+# Example usage:
+beta <- c(1, 2)
+X <- matrix(c(1, 1, 2, 3), ncol = 2)
+y <- c(1, 0)
+loss_function(beta, X, y)
 }
 \author{
-Stephane Guerrier
+Destanie Pitt, Hayden Billmann, Ashton Wise
 }

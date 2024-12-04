@@ -74,12 +74,28 @@ mc_int = function(x_range, fun, B, seed = 1291){
 
 # loss function, just following the equations and lectures codes 11_12 and 11_14
 
-# Initial beta comes from least-squares
 
+
+
+
+# Initial beta comes from least-squares
+#' @title Initial Beta Function
+#'
+#' @description Calculates the initial coefficient vector beta_i using the least squares formula
+#' @param X The design \code{matrix} of independent variables
+#' @param y The \code{vector} of dependent variables (Response variables)
+#' @return Initial estimate of the coefficient \code{vector} beta_i
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' X <- matrix(c(1, 1, 1, 1, 2, 3, 4, 5), ncol = 2)
+#' y <- c(2, 3, 4, 5)
+#' beta_initial(X, y)
 beta_initial <- function(X,y) {
 
   X <- as.matrix(X)
-  y <- as.matrix
+  y <- as.matrix(y)
 
   beta_i <-  solve(t(X) %*% X) %*% t(X) %*% y
 
@@ -93,25 +109,24 @@ beta_initial <- function(X,y) {
 
 #' @title Loss Function
 #'
-#' @description Calculates the negative log likelihood p_i
+#' @description Calculates the negative log likelihood p_i and plugs it into the loss function
 #' @param beta A \code{vector} of coefficients associated with the features in xi.
-#' @param X A \code{string} containing the input data for the ith observation
-#' @param y A \code{numeric} (integer) used to denote the number of simulations.
-#' @return A \code{list} containing the following attributes:
-#' \describe{
-#'      \item{I}{Estimated value of the integral}
-#'      \item{var}{Estimated variance of the estimator}
-#' }
-#' @author Stephane Guerrier
-#' @importFrom stats runif
+#' @param X The \bold{ith} row of the predictors
+#' @param y the \bold{ith} observation of the response
+#' @return `NULL`
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
 #' @export
 #' @examples
-#' loss_function([1,2], [1,2], 1)
-# loss function, just following the equations and lectures codes 11_12 and 11_14
+#' # Example usage:
+#'beta <- c(1, 2)
+#'X <- matrix(c(1, 1, 2, 3), ncol = 2)
+#'y <- c(1, 0)
+#'loss_function(beta, X, y)
 loss_function <- function(beta, X, y) {
   p_i <- 1 / (1 + exp(-X %*% beta))
   -sum(y * log(p_i) + (1 - y) * log(1 - p_i))
 }
+
 
 # Generate predictor variables: first column is normal, second column is Poisson with lambda equal to whatever number the user says
 # Function to generate predictor variables
