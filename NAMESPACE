@@ -2,6 +2,7 @@
 
 export(beta_initial)
 export(bootstrap)
+export(compute_metrics)
 export(fit_model)
 export(generate_predictors)
 export(generate_response)

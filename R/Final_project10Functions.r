@@ -244,11 +244,57 @@ bootstrap <- function(X, y, B = 20, alpha = 0.05) {
   return(confidence_interval)
 }
 
+
+
+
 # Function to compute confusion matrix and metrics
+#' @title Metric Computation
+#'
+#' @description Calculates the confusion matrix using the predictors and response variables, then
+#' calculates the key performance metrics for the logistic regression model
+#' @param X The design \code{matrix} of independent variables
+#' @param beta_hat The \code{vector} of estimated coefficients
+#' @param y The \code{vector} of dependent variables (Response variables)
+#' @return The key performance metrics for the logistic regression model as a \code{list}
+#' \describe{
+#'      \item{prevalence}{The proportion of positive cases in the response}
+#'      \item{confusion_matrix}{Representation of predicted vs actual classes}
+#'      \item{accuracy}{The proportion of correctly classified instances out of the total instances}
+#'      \item{sensitivity}{The proportion of actual positives correctly identified by the model}
+#'      \item{specificity}{Measures the proportion of true negatives identified by the model}
+#'      \item{false_discovery_rate}{The proportion of predicted positives that are actually negative}
+#'      \item{diagnostic_odds_ratio}{Single metric that sumarizes the performance of the diagnostic test}
+#' }
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' X <- matrix(c(1, 1, 1, 1, 2, 3, 4, 5), ncol = 2)
+#' y <- c(2, 3, 4, 5)
+#' b <- beta_initial(X,y)
+#' print(compute_metrics(X,b,y))
 compute_metrics <- function(X, beta_hat, y) {
   p_predicted <- 1 / (1 + exp(-X %*% beta_hat))
   y_predicted <- ifelse(p_predicted > 0.5, 1, 0)
   confusion_matrix <- table(Predicted = y_predicted, Actual = y)
+
+  if (!all(c(0, 1) %in% rownames(confusion_matrix))) {
+    if (!('0' %in% rownames(confusion_matrix))) {
+      confusion_matrix <- rbind(confusion_matrix, '0' = c(0, 0))
+    }
+    if (!('1' %in% rownames(confusion_matrix))) {
+      confusion_matrix <- rbind(confusion_matrix, '1' = c(0, 0))
+    }
+  }
+
+  if (!all(c(0, 1) %in% colnames(confusion_matrix))) {
+    if (!('0' %in% colnames(confusion_matrix))) {
+      confusion_matrix <- cbind(confusion_matrix, '0' = c(0, 0))
+    }
+    if (!('1' %in% colnames(confusion_matrix))) {
+      confusion_matrix <- cbind(confusion_matrix, '1' = c(0, 0))
+    }
+  }
 
   prevalence <- sum(y) / length(y)
   accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)

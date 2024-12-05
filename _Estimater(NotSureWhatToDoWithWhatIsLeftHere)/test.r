@@ -36,3 +36,10 @@ print(optimized_beta)
 X <- matrix(c(1, 1, 1, 1, 2, 3, 4, 5), ncol = 2)
 y <- c(2, 3, 4, 5)
 print(bootstrap(X, y, 20, .05))
+
+
+
+X <- matrix(c(1, 1, 1, 1, 2, 3, 4, 5), ncol = 2)
+y <- c(2, 3, 4, 5)
+b <- beta_initial(X,y)
+print(compute_metrics(X,b,y))
