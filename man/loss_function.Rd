@@ -17,7 +17,7 @@ loss_function(beta, X, y)
 The calculated loss
 }
 \description{
-Calculates the negative log likelihood p_i and plugs it into the loss function
+Calculates the negative log likelihood p_i and plugs it into the loss function to get calculated loss
 }
 \examples{
 # Example usage:

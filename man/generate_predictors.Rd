@@ -20,7 +20,9 @@ Predictor variables \code{matrix} with 2 columns
 }
 }
 \description{
-Generate the predictor variables for the data
+This function generates a matrix of predictor variables for use in logistic regression models.
+It creates a matrix with an intercept column, a column of normally distributed random variables,
+and a column of Poisson-distributed random variables.
 }
 \examples{
 # Example usage:

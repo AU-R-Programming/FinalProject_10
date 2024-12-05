@@ -19,7 +19,7 @@ bootstrap(X, y, B = 20, alpha = 0.05)
 The confidence interval
 }
 \description{
-Calculates bootstrap confidence intervals
+Calculates bootstrap confidence intervals for the logistic regression model coefficients.
 }
 \examples{
 # Example usage:
