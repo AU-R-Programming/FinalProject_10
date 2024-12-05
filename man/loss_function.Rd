@@ -14,7 +14,7 @@ loss_function(beta, X, y)
 \item{y}{the \bold{ith} observation of the response}
 }
 \value{
-`NULL`
+The calculated loss
 }
 \description{
 Calculates the negative log likelihood p_i and plugs it into the loss function

@@ -113,7 +113,7 @@ beta_initial <- function(X,y) {
 #' @param beta A \code{vector} of coefficients associated with the features in xi.
 #' @param X The \bold{ith} row of the predictors
 #' @param y the \bold{ith} observation of the response
-#' @return `NULL`
+#' @return The calculated loss
 #' @author Destanie Pitt, Hayden Billmann, Ashton Wise
 #' @export
 #' @examples
@@ -124,12 +124,37 @@ beta_initial <- function(X,y) {
 #'loss_function(beta, X, y)
 loss_function <- function(beta, X, y) {
   p_i <- 1 / (1 + exp(-X %*% beta))
+
+  epsilon <- 1e-15
+  p_i <- pmax(pmin(p_i, 1 - epsilon), epsilon)
+
   -sum(y * log(p_i) + (1 - y) * log(1 - p_i))
 }
 
 
+
+
+
 # Generate predictor variables: first column is normal, second column is Poisson with lambda equal to whatever number the user says
 # Function to generate predictor variables
+#' @title Predictor Variable Generation
+#'
+#' @description Generate the predictor variables for the data
+#' @param n An \code{integer} specifying the number of observations
+#' @param lambda The rate parameter for the Poisson distribution
+#' @return Predictor variables \code{matrix} with 2 columns
+#' \describe{
+#'      \item{Column 1}{Intercept column}
+#'      \item{Column 2}{Normally distributed predictor variables}
+#'      \item{Column 3}{Poisson-distributed predictor variables}
+#' }
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' # Generate 5 observations with Poisson distribution parameter lambda = 3
+#' predictors <- generate_predictors(5, 3)
+#' print(predictors)
 generate_predictors <- function(n, lambda)
 {
   X <- cbind(rnorm(n), rpois(n, lambda = lambda))
@@ -137,7 +162,24 @@ generate_predictors <- function(n, lambda)
   return(X)
 }
 
+
+
 # Function to generate response variable
+#' @title Generate Response Variable
+#'
+#' @description Calculates the predicted probabilities for each observation, then generates random
+#' binary responses for each observation based on the probabilities
+#' @param X A \code{matrix} of predictor variables
+#' @param beta_true A \code{vector} of true coefficients
+#' @return The random binary responses for each observation
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' beta_true <- c(0.5, -1, 2)
+#' X <- matrix(c(1, 2, 3, 4, 5, 6), ncol = 3)
+#' response <- generate_response(X, beta_true)
+#' print(response)
 generate_response <- function(X, beta_true) {
   p <- 1 / (1 + exp(-X %*% beta_true))
   rbinom(nrow(X), 1, p)
@@ -145,7 +187,23 @@ generate_response <- function(X, beta_true) {
 
 
 
+
 # fn argument is the optimization function
+#' @title Model Fit
+#'
+#' @description Estimates the initial coefficients and uses the \code{optim()} function to minimize the
+#' loss function and find the optimized coefficients
+#' @param X The design \code{matrix} of independent variables
+#' @param y The \code{vector} of dependent variables (Response variables)
+#' @return The optimized coefficients
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' X <- matrix(c(1, 2, 3, 4, 5, 6), ncol = 3)
+#' y <- c(0, 1)
+#' optimized_beta <- fit_model(X, y)
+#' print(optimized_beta)
 fit_model <- function(X, y) {
   beta_init <- beta_initial(X, y)
   fit <- optim(beta_init, loss_function, X = X, y = y, method = "BFGS")
@@ -155,6 +213,21 @@ fit_model <- function(X, y) {
 # Now bootstrapping for confidence intervals
 
 # User enters the number of bootstrap samples
+#' @title Bootstrap
+#'
+#' @description Calculates bootstrap confidence intervals
+#' @param X The design \code{matrix} of independent variables
+#' @param y The \code{vector} of dependent variables (Response variables)
+#' @param B The number of bootstraps. Default is 20
+#' @param alpha The significance level to obtain for the 1 - alpha confidence intervals for Beta. Default is .05
+#' @return The confidence interval
+#' @author Destanie Pitt, Hayden Billmann, Ashton Wise
+#' @export
+#' @examples
+#' # Example usage:
+#' X <- matrix(c(1, 1, 1, 1, 2, 3, 4, 5), ncol = 2)
+#' y <- c(2, 3, 4, 5)
+#' print(bootstrap(X, y, 20, .05))
 bootstrap <- function(X, y, B = 20, alpha = 0.05) {
   beta_boot <- matrix(NA, nrow = B, ncol = ncol(X))
 
