@@ -5,9 +5,43 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+## Introduction
+This vignette demonstrates how to use the `Estimater` package for binary classification.
+We use the `adult` dataset to predict whether an individual's income is above $50K.
 
-## Analysis
-
+## Loading and Preprocessing Data
 ```{r}
-# Your R code goes here
-summary(cars)
+# Load required libraries
+library(Estimater)
+
+# Load the dataset
+data <- read.csv("adult.csv", sep = ";")
+
+# Clean the data: Convert income to binary outcome (1: >50K, 0: <=50K)
+data$Income <- ifelse(data$NA == " >50K", 1, 0)
+
+# Select relevant features
+X <- data[, c("age", "education.num", "hours.per.week", "capital.gain", "capital.loss")]
+y <- data$Income
+
+# Calculate initial coefficients
+beta_init <- beta_initial(X, y)
+print(beta_init)
+
+# Optimize coefficients using numerical optimization (if function is implemented)
+beta_optimized <- optimize_coefficients(X, y, init = beta_init)
+print(beta_optimized)
+
+# Generate bootstrap confidence intervals
+boot_intervals <- bootstrap_confidence(X, y, num_bootstrap = 50, alpha = 0.05)
+print(boot_intervals)
+
+# Generate predictions
+predictions <- predict_binary(beta_optimized, X)
+
+# Compute confusion matrix and metrics
+metrics <- compute_metrics(y, predictions)
+print(metrics)
+
+# Sources
++ https://chatgpt.com/c/6753922b-be70-8000-8f06-c9d4a146d5de
