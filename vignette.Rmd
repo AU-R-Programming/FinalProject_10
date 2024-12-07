@@ -1,0 +1,101 @@
+
+---
+title: "Binary Classification with the Logistic Regression Package"
+author: "Destanie Pitt, Hayden Billmann, Ashton Wise"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Introduction
+This vignette demonstrates the usage of the logistic regression package, which solves binary classification problems using numerical optimization techniques. The package provides functions for generating data, estimating coefficients, computing confidence intervals, and evaluating model performance.
+
+# Installation
+
+To install the package from GitHub, use:
+
+```{r, eval=FALSE}
+# Install devtools if not already installed
+install.packages("devtools")
+
+# Install the package
+devtools::install_github("AU-R-Programming/FinalProject_10")
+
+```
+
+# Workflow
+The workflow consists of the following steps:
+1. Generate predictor and response variables.
+2. Fit a logistic regression model.
+3. Bootstrap confidence intervals for the coefficients.
+4. Compute classification metrics.
+
+## Simulating Data
+We first generate predictor variables and a response variable using the provided functions.
+
+```{r}
+# Load necessary functions
+library(Estimater)
+
+# Set parameters
+set.seed(123)
+n <- 100
+lambda <- 3
+beta_true <- c(0.5, -1, 2)
+
+# Generate predictors and response
+X <- generate_predictors(n, lambda)
+y <- generate_response(X, beta_true)
+```
+
+## Fitting the Model
+Use the `fit_model` function to estimate the logistic regression coefficients by minimizing the loss function.
+
+```{r}
+# Fit the model
+beta_hat <- fit_model(X, y)
+cat("Optimized Coefficients:\n")
+print(beta_hat)
+```
+
+## Bootstrap Confidence Intervals
+We calculate confidence intervals for the estimated coefficients using bootstrapping.
+
+```{r}
+# Bootstrap confidence intervals
+B <- 50
+alpha <- 0.05
+confidence_intervals <- bootstrap(X, y, B, alpha)
+cat("Bootstrap Confidence Intervals:\n")
+print(confidence_intervals)
+```
+
+## Evaluate Model Performance
+We compute the confusion matrix and key performance metrics using the `compute_metrics` function.
+
+```{r}
+# Compute metrics
+metrics <- compute_metrics(X, beta_hat, y)
+cat("Model Performance Metrics:\n")
+print(metrics)
+```
+
+## Complete Logistic Regression Pipeline
+The `logistic_regression_pipeline` function combines all steps into a single pipeline.
+
+```{r}
+# Run the logistic regression pipeline
+results <- logistic_regression_pipeline(n, lambda, beta_true, B, alpha)
+
+# Display results
+cat("Optimized Coefficients:\n")
+print(results$beta_hat)
+
+cat("\nBootstrap Confidence Intervals:\n")
+print(results$confidence_interval)
+
+cat("\nModel Performance Metrics:\n")
+print(results$metrics)
+```
+
+# Conclusion
+This vignette illustrates how to use the package to perform logistic regression for binary classification, from data generation to model evaluation. For more details on individual functions, refer to the function documentation.
