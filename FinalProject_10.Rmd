@@ -15,10 +15,10 @@ We use the `adult` dataset to predict whether an individual's income is above $5
 library(Estimater)
 
 # Load the dataset
-data <- read.csv("adult.csv", sep = ";")
+data <- read.csv("adult(1).csv", sep = ";")
 
 # Clean the data: Convert income to binary outcome (1: >50K, 0: <=50K)
-data$Income <- ifelse(data$NA == " >50K", 1, 0)
+data$Income <- ifelse(data$"NA" == " >50K", 1, 0)
 
 # Select relevant features
 X <- data[, c("age", "education.num", "hours.per.week", "capital.gain", "capital.loss")]
@@ -44,4 +44,4 @@ metrics <- compute_metrics(y, predictions)
 print(metrics)
 
 # Sources
-+ https://chatgpt.com/c/6753922b-be70-8000-8f06-c9d4a146d5de
++ "https://chatgpt.com/c/6753922b-be70-8000-8f06-c9d4a146d5de"
