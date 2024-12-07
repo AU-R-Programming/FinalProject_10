@@ -1,103 +1,103 @@
-
 library(shiny)
-library(ggplot2)
+library(Estimater)
 
-# Define UI for application that draws a histogram
+# Define UI
 ui <- fluidPage(
+  titlePanel("Logistic Regression Shiny App"),
 
-    # Application title
-    titlePanel("Logistic Regression Analysis"),
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file", "Upload CSV File", accept = ".csv"),
+      uiOutput("response_selector"),
+      uiOutput("predictors_selector"),
+      numericInput("B", "Number of Bootstraps:", value = 50, min = 1),
+      numericInput("alpha", "Significance Level (alpha):", value = 0.05, min = 0.01, max = 0.1),
+      actionButton("run", "Run Analysis")
+    ),
 
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-
-          fileInput("dataset", "Upload Dataset (CSV)", accept = ".csv"),
-          numericInput("alpha", "Confidence Level (alpha)", value = 0.05, min = 0.01, max = 0.1, step = 0.01),
-          numericInput("n_bootstrap", "Number of Bootstraps", value = 20, min = 1, max = 100, step = 1),
-          actionButton("run", "Run Analysis")
-
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Results",
+                 h4("Optimized Coefficients"),
+                 verbatimTextOutput("beta_hat"),
+                 h4("Bootstrap Confidence Intervals"),
+                 verbatimTextOutput("confidence_intervals"),
+                 h4("Performance Metrics"),
+                 verbatimTextOutput("metrics")),
+        tabPanel("Visualization",
+                 plotOutput("confusion_matrix_plot"))
+      )
     )
+  )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
-  #  load dataset
-  data <- reactive({
-    req(input$dataset)
-    read.csv(input$dataset$datapath)
+# Define Server
+server <- function(input, output, session) {
+  # Reactive expression to load and preprocess the dataset
+  dataset <- reactive({
+    req(input$file)
+    data <- read.csv(input$file$datapath, sep = ";", quote = '"')  # Handle semicolon-delimited files
+    colnames(data) <- trimws(make.names(colnames(data)))  # Clean column names
+    data
   })
 
-  # running the analysis
-  analysis_results <- eventReactive(input$run, {
-    dataset <- data()
-
-    # Assuming predictors and response are known columns in the dataset
-    X <- as.matrix(dataset[, -ncol(dataset)]) # All columns except the last
-    y <- dataset[, ncol(dataset)]            # Last column is the response
-
-    # Step 1: Compute initial beta
-    beta_init <- beta_initial(X, y)
-
-    # Step 2: Fit the model (use your fit_model function here)
-    fitted_model <- fit_model(X, y, beta_init)
-
-    # Step 3: Perform bootstrapping (use your bootstrap function here)
-    bootstrap_results <- bootstrap(fitted_model, X, y, n = input$n_bootstrap)
-
-    # Step 4: Compute metrics and confusion matrix
-    metrics <- compute_metrics(fitted_model, X, y, cutoff = 0.5)
-    conf_matrix <- metrics$conf_matrix
-
-    list(
-      summary = list(beta_init = beta_init, metrics = metrics),
-      conf_matrix = conf_matrix,
-      bootstrap = bootstrap_results
-    )
+  # Dynamically generate response variable selector
+  output$response_selector <- renderUI({
+    req(dataset())
+    selectInput("response", "Select Response Variable:", choices = colnames(dataset()))
   })
 
-  # Outputs
-  output$summary <- renderTable({
-    req(analysis_results())
-    summary <- analysis_results()$summary
-    data.frame(
-      Metric = names(summary$metrics),
-      Value = unlist(summary$metrics)
-    )
+  # Dynamically generate predictor variable selector
+  output$predictors_selector <- renderUI({
+    req(dataset())
+    checkboxGroupInput("predictors", "Select Predictor Variables:", choices = colnames(dataset()))
   })
 
-  output$conf_matrix <- renderTable({
-    req(analysis_results())
-    analysis_results()$conf_matrix
-  })
+  observeEvent(input$run, {
+    req(dataset(), input$response, input$predictors)
 
-  output$metrics <- renderTable({
-    req(analysis_results())
-    metrics <- analysis_results()$summary$metrics
-    data.frame(
-      Metric = names(metrics),
-      Value = unlist(metrics)
-    )
-  })
+    # Extract selected predictors and response
+    data <- dataset()
 
-  output$confidence_plot <- renderPlot({
-    req(analysis_results())
-    bootstrap <- analysis_results()$bootstrap
+    # Ensure predictors are numeric
+    predictors <- data[, input$predictors, drop = FALSE]
+    X <- as.matrix(dplyr::select_if(predictors, is.numeric))  # Keep only numeric predictors
+    X <- cbind(1, X)  # Add intercept
 
-    # Example: Visualize confidence intervals for each beta coefficient
-    ggplot(bootstrap, aes(x = Variable, y = Estimate)) +
-      geom_point() +
-      geom_errorbar(aes(ymin = Lower, ymax = Upper)) +
-      labs(title = "Confidence Intervals for Beta Coefficients")
+    # Convert response variable to numeric
+    y <- as.numeric(as.factor(data[[input$response]])) - 1  # Convert factor to binary (0/1)
+
+    # Check for errors
+    if (ncol(X) == 0 || any(is.na(y))) {
+      showNotification("Error: Ensure predictors are numeric and the response variable is binary.", type = "error")
+      return(NULL)
+    }
+
+    # Fit logistic regression and compute results
+    results <- logistic_regression_pipeline(n = nrow(X), lambda = 0, beta_true = NULL, B = input$B, alpha = input$alpha)
+
+    # Display results
+    output$beta_hat <- renderPrint({
+      results$beta_hat
+    })
+
+    output$confidence_intervals <- renderPrint({
+      results$confidence_interval
+    })
+
+    output$metrics <- renderPrint({
+      results$metrics
+    })
+
+    # Visualization: Confusion matrix plot
+    output$confusion_matrix_plot <- renderPlot({
+      cm <- results$metrics$confusion_matrix
+      barplot(cm, beside = TRUE, legend = TRUE, col = c("blue", "red"),
+              main = "Confusion Matrix", xlab = "Actual", ylab = "Predicted")
+    })
   })
 }
 
-# Run the application
+
+# Run the app
 shinyApp(ui = ui, server = server)
