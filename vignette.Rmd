@@ -3,11 +3,16 @@
 title: "Binary Classification with the Logistic Regression Package"
 author: "Destanie Pitt, Hayden Billmann, Ashton Wise"
 date: "`r Sys.Date()`"
-output: html_document
+output: 
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Binary Classification with Logistic Regression}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 # Introduction
-This vignette demonstrates the usage of the logistic regression package, which solves binary classification problems using numerical optimization techniques. The package provides functions for generating data, estimating coefficients, computing confidence intervals, and evaluating model performance.
+This vignette demonstrates the usage of the logistic regression package with the provided `adult` dataset. The binary classification problem involves predicting whether a person earns `<=50K` or `>50K` based on various demographic and work-related variables.
 
 # Installation
 
@@ -24,33 +29,35 @@ devtools::install_github("AU-R-Programming/FinalProject_10")
 
 # Workflow
 The workflow consists of the following steps:
-1. Generate predictor and response variables.
-2. Fit a logistic regression model.
-3. Bootstrap confidence intervals for the coefficients.
-4. Compute classification metrics.
+1. Load the dataset.
+2. Preprocess the data.
+3. Fit a logistic regression model using selected predictors.
+4. Compute confidence intervals for the coefficients.
+5. Evaluate the model using performance metrics.
 
-## Simulating Data
-We first generate predictor variables and a response variable using the provided functions.
+## Load and Preprocess the Dataset
+We load the dataset and preprocess it by encoding the target variable (`NA`) as a binary numeric variable (`0` for `<=50K`, `1` for `>50K`).
 
 ```{r}
 # Load necessary functions
 library(Estimater)
 
-# Set parameters
-set.seed(123)
-n <- 100
-lambda <- 3
-beta_true <- c(0.5, -1, 2)
+# Load the dataset
+data <- read.csv("adult(1).csv", sep = ";", quote = '"')
 
-# Generate predictors and response
-X <- generate_predictors(n, lambda)
-y <- generate_response(X, beta_true)
+# Preprocess the dataset
+data$Income <- as.numeric(data$"NA" == " >50K")  # Encode the target variable as binary (0/1)
 ```
 
-## Fitting the Model
-Use the `fit_model` function to estimate the logistic regression coefficients by minimizing the loss function.
+## Fit the Logistic Regression Model
+We select a subset of predictors (`age`, `education.num`, `hours-per-week`, and `capital-gain`) and fit a logistic regression model.
 
 ```{r}
+# Select predictors and response variable
+X <- as.matrix(data[ , c("age", "education.num", "hours.per.week", "capital.gain")])
+X <- cbind(1, X)  # Add intercept column
+y <- data$Income
+
 # Fit the model
 beta_hat <- fit_model(X, y)
 cat("Optimized Coefficients:\n")
@@ -58,7 +65,7 @@ print(beta_hat)
 ```
 
 ## Bootstrap Confidence Intervals
-We calculate confidence intervals for the estimated coefficients using bootstrapping.
+We compute confidence intervals for the estimated coefficients using bootstrapping.
 
 ```{r}
 # Bootstrap confidence intervals
@@ -83,8 +90,7 @@ print(metrics)
 The `logistic_regression_pipeline` function combines all steps into a single pipeline.
 
 ```{r}
-# Run the logistic regression pipeline
-results <- logistic_regression_pipeline(n, lambda, beta_true, B, alpha)
+results <- logistic_regression_pipeline(n = nrow(X), lambda = NULL, beta_true = NULL, B = 50, alpha = 0.05)
 
 # Display results
 cat("Optimized Coefficients:\n")
@@ -98,4 +104,4 @@ print(results$metrics)
 ```
 
 # Conclusion
-This vignette illustrates how to use the package to perform logistic regression for binary classification, from data generation to model evaluation. For more details on individual functions, refer to the function documentation.
+This vignette illustrates how to use the package with a real dataset to perform logistic regression, compute confidence intervals, and evaluate performance metrics. For more details on individual functions, refer to the function documentation.
