@@ -1,17 +1,16 @@
 Package: Estimater
 Type: Package
-Title: Binary Classification with Numerical Optimization
+Title: What the Package Does (Title Case)
 Version: 0.1.0
 Authors@R: c(
-    person("Hayden", "Billmann", email = "hrb0047@auburn.edu", role = c("aut", "cre")),
+    person("Hayden", "Billmann", email = "hrb0047@auburn.edu", role = c("aut","cre")),
     person("Destanie", "Pitt", role = "aut"),
     person("Ashton", "Wise", role = "aut")
-)
-Maintainer: Hayden Billmann <hrb0047@auburn.edu>
-Description: This package gives its users functions and tools for binary classification using numerical optimization.
-    Includes functions for coefficient estimation, bootstrap confidence intervals,
-    and classification metrics.
-License: GNU
+    )
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
