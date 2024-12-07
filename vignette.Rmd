@@ -24,7 +24,6 @@ install.packages("devtools")
 
 # Install the package
 devtools::install_github("AU-R-Programming/FinalProject_10")
-
 ```
 
 # Workflow
@@ -38,7 +37,7 @@ The workflow consists of the following steps:
 ## Load and Preprocess the Dataset
 We load the dataset and preprocess it by encoding the target variable (`NA`) as a binary numeric variable (`0` for `<=50K`, `1` for `>50K`).
 
-```{r}
+```{r, eval=FALSE}
 # Load necessary functions
 library(Estimater)
 
@@ -52,55 +51,57 @@ data$Income <- as.numeric(data$"NA" == " >50K")  # Encode the target variable as
 ## Fit the Logistic Regression Model
 We select a subset of predictors (`age`, `education.num`, `hours-per-week`, and `capital-gain`) and fit a logistic regression model.
 
-```{r}
+```{r, eval=FALSE}
 # Select predictors and response variable
-X <- as.matrix(data[ , c("age", "education.num", "hours.per.week", "capital.gain")])
+X <- as.matrix(data[, c("age", "education.num", "hours.per.week", "capital.gain")])
 X <- cbind(1, X)  # Add intercept column
 y <- data$Income
 
+# Validate predictors and response
+if (any(is.na(X))) stop("Error: X contains NA values.")
+if (length(unique(y)) != 2) stop("Error: Response variable must be binary.")
+
 # Fit the model
 beta_hat <- fit_model(X, y)
-cat("Optimized Coefficients:\n")
+print("Optimized Coefficients:")
 print(beta_hat)
 ```
 
 ## Bootstrap Confidence Intervals
 We compute confidence intervals for the estimated coefficients using bootstrapping.
 
-```{r}
+```{r, eval=FALSE}
 # Bootstrap confidence intervals
 B <- 50
 alpha <- 0.05
 confidence_intervals <- bootstrap(X, y, B, alpha)
-cat("Bootstrap Confidence Intervals:\n")
+print("Bootstrap Confidence Intervals:")
 print(confidence_intervals)
 ```
 
 ## Evaluate Model Performance
 We compute the confusion matrix and key performance metrics using the `compute_metrics` function.
 
-```{r}
+```{r, eval=FALSE}
 # Compute metrics
 metrics <- compute_metrics(X, beta_hat, y)
-cat("Model Performance Metrics:\n")
+print("Model Performance Metrics:")
 print(metrics)
 ```
 
 ## Complete Logistic Regression Pipeline
-The `logistic_regression_pipeline` function combines all steps into a single pipeline.
+We run the full logistic regression pipeline.
 
-```{r}
-results <- logistic_regression_pipeline(n = nrow(X), lambda = NULL, beta_true = NULL, B = 50, alpha = 0.05)
+```{r, eval=FALSE}
+# Run logistic regression pipeline
+results <- logistic_regression_pipeline(
+  n = nrow(X),
+  lambda = 1,
+  beta_true = rep(0, ncol(X)),
+  B = 50,
+  alpha = 0.05
+)
 
-# Display results
-cat("Optimized Coefficients:\n")
-print(results$beta_hat)
-
-cat("\nBootstrap Confidence Intervals:\n")
-print(results$confidence_interval)
-
-cat("\nModel Performance Metrics:\n")
-print(results$metrics)
 ```
 
 # Conclusion
